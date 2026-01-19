@@ -72,10 +72,13 @@ export default async function handler(req: any, res: any) {
 
     try {
       // 2. Call OpenAI API based on input type
+      // 使用モデル: gpt-5-nano
+      const MODEL_NAME = "gpt-5-nano";
+
       if (address) {
         // --- Address Splitting Logic ---
         const completion = await openai.chat.completions.create({
-          model: "gpt-4o-mini",
+          model: MODEL_NAME,
           messages: [
             {
               role: "system",
@@ -120,7 +123,7 @@ export default async function handler(req: any, res: any) {
       } else {
         // --- Name Splitting Logic ---
         const completion = await openai.chat.completions.create({
-          model: "gpt-4o-mini",
+          model: MODEL_NAME,
           messages: [
             {
               role: "system",
