@@ -43,8 +43,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             <h3 className="font-semibold text-white mb-4">サービス</h3>
             <ul className="space-y-3 text-sm">
               <li><Link to={RoutePath.HOME} className="hover:text-brand-400 transition-colors">ホーム</Link></li>
-              <li><a href="#pricing" className="hover:text-brand-400 transition-colors">料金プラン</a></li>
-              <li><a href="#usage" className="hover:text-brand-400 transition-colors">使い方</a></li>
             </ul>
           </div>
 
