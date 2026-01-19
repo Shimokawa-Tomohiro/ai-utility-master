@@ -1,4 +1,4 @@
-import { getSupabaseClient } from '../lib/supabase';
+import { getSupabaseClient } from './_lib/supabase';
 
 export default async function handler(req: any, res: any) {
   // CORS Headers

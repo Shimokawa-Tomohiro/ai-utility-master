@@ -23,6 +23,3 @@ export const getSupabaseClient = () => {
     return null;
   }
 };
-
-// 後方互換性のため、または即時初期化が必要な場合のためにエクスポート（非推奨）
-// export const supabase = ... は削除し、関数経由でのアクセスに統一します

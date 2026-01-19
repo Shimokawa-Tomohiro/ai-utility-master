@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 import { Resend } from 'resend';
-import { getSupabaseClient } from '../lib/supabase';
+import { getSupabaseClient } from './_lib/supabase';
 import crypto from 'crypto';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
