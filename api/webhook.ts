@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 import { Resend } from 'resend';
-import { getSupabaseClient } from './_lib/supabase';
+import { getSupabaseClient } from '../lib/supabase';
 import crypto from 'crypto';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
@@ -116,6 +116,8 @@ export default async function handler(req: any, res: any) {
 
         try {
           const supabase = getSupabaseClient();
+          if (!supabase) throw new Error("Supabase client init failed");
+
           const { error } = await supabase.from('user_credits').insert({
             pin_code: newPin,
             credits: addedCredits,

@@ -1,7 +1,7 @@
-import { getSupabaseClient } from './_lib/supabase';
+import { getSupabaseClient } from '../lib/supabase';
 
 export default async function handler(req: any, res: any) {
-  // CORS Headers - Ensure strict string types
+  // CORS Headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -39,7 +39,6 @@ export default async function handler(req: any, res: any) {
       .single();
 
     if (error || !data) {
-      // データベース接続自体は成功したが、レコードがない場合
       return res.status(200).json({ valid: false, message: '無効なPINコードです' });
     }
 
@@ -51,7 +50,6 @@ export default async function handler(req: any, res: any) {
 
   } catch (error: any) {
     console.error('Balance Check Error:', error);
-    // 予期せぬエラーも200で返し、フロントエンドでメッセージを表示させる
     return res.status(200).json({ 
       valid: false, 
       message: `サーバーエラー: ${error.message || 'Unknown Error'}` 

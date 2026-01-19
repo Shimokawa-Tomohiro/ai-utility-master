@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { getSupabaseClient } from './_lib/supabase';
+import { getSupabaseClient } from '../lib/supabase';
 
 // Initialize OpenAI safely
 const getOpenAI = () => {
