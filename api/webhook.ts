@@ -4,11 +4,13 @@ import { getSupabaseClient } from './_lib/supabase';
 import crypto from 'crypto';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-12-15.clover' as any,
+  apiVersion: '2023-10-16' as any, // 安定版のAPIバージョンを指定
+  typescript: true,
 });
+
 const resend = new Resend(process.env.RESEND_API_KEY);
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-const MY_DOMAIN = "name-spliter.vercel.app";
+const MY_DOMAIN = "ai-utility-master.vercel.app";
 
 export const config = {
   api: {
@@ -32,9 +34,14 @@ function generatePin() {
 async function sendPinEmail(toEmail: string, pinCode: string, credits: number, planName: string) {
   const sheetFormula = `=IMPORTDATA("https://${MY_DOMAIN}/api/sheet?name=" & ENCODEURL(A1) & "&pin=${pinCode}")`;
   
+  console.log(`[Email] Attempting to send to: ${toEmail}`);
+  
   try {
-    await resend.emails.send({
-      from: 'AI Utility Master <onboarding@resend.dev>',
+    // Resendの送信処理
+    // 注: Resendの無料枠(Sandbox)では、登録した自分のメールアドレスにしか送信できません。
+    // 本番運用するにはResendダッシュボードでドメインの追加とDNS設定が必要です。
+    const { data, error } = await resend.emails.send({
+      from: 'AI Utility Master <onboarding@resend.dev>', // 本番時は自身の認証済みドメインに変更推奨
       to: toEmail,
       subject: '【姓名分割AI】PINコード発行のお知らせ',
       html: `
@@ -67,9 +74,17 @@ async function sendPinEmail(toEmail: string, pinCode: string, credits: number, p
         </div>
       `
     });
-    console.log(`Email sent to ${toEmail}`);
-  } catch (error) {
-    console.error(`Email Error:`, error);
+
+    // Resend APIがエラーオブジェクトを返した場合のハンドリング
+    if (error) {
+      console.error(`[Email Error] Resend API returned error:`, JSON.stringify(error, null, 2));
+      throw new Error(`Resend API Error: ${error.message}`);
+    }
+
+    console.log(`[Email Success] Sent to ${toEmail}. ID: ${data?.id}`);
+  } catch (err: any) {
+    console.error(`[Email Critical Error] Failed to send email:`, err);
+    throw err; // エラーを上位に投げてリトライ制御させる
   }
 }
 
@@ -86,7 +101,7 @@ export default async function handler(req: any, res: any) {
     if (!endpointSecret) throw new Error("Missing Webhook Secret");
     event = stripe.webhooks.constructEvent(buf, sig, endpointSecret);
   } catch (err: any) {
-    console.error(`Webhook Error: ${err.message}`);
+    console.error(`Webhook Signature Error: ${err.message}`);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
@@ -94,6 +109,8 @@ export default async function handler(req: any, res: any) {
     const session = event.data.object as Stripe.Checkout.Session;
     const customerEmail = session.customer_details?.email;
     const amountTotal = session.amount_total;
+
+    console.log(`[Webhook] Processing checkout. Email: ${customerEmail}, Amount: ${amountTotal}`);
 
     if (customerEmail && amountTotal) {
       let addedCredits = 100;
@@ -118,21 +135,32 @@ export default async function handler(req: any, res: any) {
           const supabase = getSupabaseClient();
           if (!supabase) throw new Error("Supabase client init failed");
 
-          const { error } = await supabase.from('user_credits').insert({
+          const { error: dbError } = await supabase.from('user_credits').insert({
             pin_code: newPin,
             credits: addedCredits,
             email: customerEmail,
             plan_type: planName
           });
 
-          if (error) {
-            console.error("DB Insert Error:", error);
-            if (i === maxRetries - 1) throw error;
-            continue;
+          if (dbError) {
+            console.error("[DB Error] Insert failed (likely duplicate PIN):", dbError);
+            if (i === maxRetries - 1) throw dbError;
+            continue; // Retry with new PIN
+          }
+          
+          console.log(`[DB Success] PIN ${newPin} created. Sending email...`);
+
+          // メール送信試行
+          try {
+            await sendPinEmail(customerEmail, newPin, addedCredits, planName);
+          } catch (emailErr) {
+            console.error("[Fatal] PIN created but email failed.", emailErr);
+            // 注: ここでエラーを返すとStripeがリトライし、PINが重複発行される可能性があります。
+            // そのため、DB保存成功後はWebhookとしては200を返し、
+            // メール不達はログ監視で対応するのが一般的な安全策です。
           }
 
-          await sendPinEmail(customerEmail, newPin, addedCredits, planName);
-          break;
+          break; // Success loop exit
 
         } catch (e) {
           console.error("Critical error in PIN generation loop:", e);
@@ -141,6 +169,8 @@ export default async function handler(req: any, res: any) {
           }
         }
       }
+    } else {
+        console.warn("[Webhook] Missing email or amount in session data.");
     }
   }
 

@@ -10,7 +10,7 @@ export const Home: React.FC = () => {
     alert('コピーしました！');
   };
 
-  const sampleFormula = '=IMPORTDATA("https://name-spliter.vercel.app/api/sheet?name=" & ENCODEURL(A1) & "&pin=AI-XXXX...")';
+  const sampleFormula = '=IMPORTDATA("https://ai-utility-master.vercel.app/api/sheet?name=" & ENCODEURL(A1) & "&pin=AI-XXXX...")';
 
   return (
     <div className="pb-20">
