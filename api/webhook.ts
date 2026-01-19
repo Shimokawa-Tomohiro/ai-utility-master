@@ -1,10 +1,10 @@
 import Stripe from 'stripe';
 import { Resend } from 'resend';
-import { supabase } from '../lib/supabase';
+import { supabase } from './_lib/supabase';
 import crypto from 'crypto';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-12-15.clover',
+  apiVersion: '2025-12-15.clover' as any, // Cast to any to avoid strict version type check errors in some envs
 });
 const resend = new Resend(process.env.RESEND_API_KEY);
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -127,8 +127,6 @@ export default async function handler(req: any, res: any) {
           });
 
           if (error) {
-            // Check for uniqueness violation if Supabase returns specific error code for unique constraint
-            // For now, assuming any error might be collision or connection issue, but let's log it
             console.error("DB Insert Error:", error);
             if (i === maxRetries - 1) throw error; // Re-throw on last attempt
             continue;

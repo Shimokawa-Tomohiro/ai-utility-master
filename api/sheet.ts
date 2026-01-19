@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { supabase } from '../lib/supabase';
+import { supabase } from './_lib/supabase';
 
 // Initialize OpenAI
 const openai = new OpenAI({
