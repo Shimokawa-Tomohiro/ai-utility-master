@@ -1,16 +1,15 @@
 import Stripe from 'stripe';
 import { Resend } from 'resend';
-import { supabase } from './_lib/supabase';
+import { getSupabaseClient } from './_lib/supabase';
 import crypto from 'crypto';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-12-15.clover' as any, // Cast to any to avoid strict version type check errors in some envs
+  apiVersion: '2025-12-15.clover' as any,
 });
 const resend = new Resend(process.env.RESEND_API_KEY);
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 const MY_DOMAIN = "name-spliter.vercel.app";
 
-// Raw body parser helper for Stripe signature verification
 export const config = {
   api: {
     bodyParser: false,
@@ -26,7 +25,6 @@ async function buffer(readable: any) {
 }
 
 function generatePin() {
-  // Generate random hex string (12 chars) and prefix with AI-
   const randomPart = crypto.randomBytes(6).toString('hex').toUpperCase();
   return `AI-${randomPart}`;
 }
@@ -36,7 +34,7 @@ async function sendPinEmail(toEmail: string, pinCode: string, credits: number, p
   
   try {
     await resend.emails.send({
-      from: 'AI Utility Master <onboarding@resend.dev>', // Update this to your verified domain in production
+      from: 'AI Utility Master <onboarding@resend.dev>',
       to: toEmail,
       subject: '【姓名分割AI】PINコード発行のお知らせ',
       html: `
@@ -101,7 +99,6 @@ export default async function handler(req: any, res: any) {
       let addedCredits = 100;
       let planName = "Unknown";
 
-      // Simple logic mapping amount to plan
       if (amountTotal === 500) {
         addedCredits = 500;
         planName = "ライト";
@@ -113,12 +110,12 @@ export default async function handler(req: any, res: any) {
         planName = "ビジネス";
       }
 
-      // Retry logic for PIN generation collision
       const maxRetries = 5;
       for (let i = 0; i < maxRetries; i++) {
         const newPin = generatePin();
 
         try {
+          const supabase = getSupabaseClient();
           const { error } = await supabase.from('user_credits').insert({
             pin_code: newPin,
             credits: addedCredits,
@@ -128,13 +125,12 @@ export default async function handler(req: any, res: any) {
 
           if (error) {
             console.error("DB Insert Error:", error);
-            if (i === maxRetries - 1) throw error; // Re-throw on last attempt
+            if (i === maxRetries - 1) throw error;
             continue;
           }
 
-          // Success - Send Email
           await sendPinEmail(customerEmail, newPin, addedCredits, planName);
-          break; // Exit retry loop
+          break;
 
         } catch (e) {
           console.error("Critical error in PIN generation loop:", e);

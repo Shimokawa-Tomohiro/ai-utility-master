@@ -1,6 +1,20 @@
-import { supabase } from './_lib/supabase';
+import { getSupabaseClient } from './_lib/supabase';
 
 export default async function handler(req: any, res: any) {
+  // CORS Headers
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+  );
+
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
   const { pin } = req.query;
 
   if (!pin) {
@@ -8,6 +22,8 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
+    const supabase = getSupabaseClient();
+    
     const { data, error } = await supabase
       .from('user_credits')
       .select('credits, plan_type')
@@ -15,17 +31,23 @@ export default async function handler(req: any, res: any) {
       .single();
 
     if (error || !data) {
-      return res.json({ valid: false, message: 'Invalid PIN' });
+      // PINが見つからない場合は単に無効として返す（500エラーにしない）
+      return res.status(200).json({ valid: false, message: 'Invalid PIN' });
     }
 
-    return res.json({
+    return res.status(200).json({
       valid: true,
       credits: data.credits,
       plan: data.plan_type
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Balance Check Error:', error);
-    return res.status(500).json({ valid: false, message: 'Server Error' });
+    // 環境変数エラーなどの場合
+    return res.status(500).json({ 
+      valid: false, 
+      message: 'Server Error', 
+      detail: error.message 
+    });
   }
 }

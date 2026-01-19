@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { supabase } from './_lib/supabase';
+import { getSupabaseClient } from './_lib/supabase';
 
 // Initialize OpenAI
 const openai = new OpenAI({
@@ -17,6 +17,8 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
+    const supabase = getSupabaseClient();
+
     // 1. Check PIN and Credits in Supabase
     const { data: userData, error: dbError } = await supabase
       .from('user_credits')
@@ -33,7 +35,6 @@ export default async function handler(req: any, res: any) {
     }
 
     // 2. Call OpenAI API for Name Splitting
-    // Using gpt-4o-mini as requested
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [

@@ -1,13 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 
-// 環境変数からSupabaseのURLとキーを取得
-// バックエンド処理（Webhook等）では権限の強い SERVICE_KEY を使用することを想定
-// フロントエンド用には別途公開キーを使用する場合もありますが、ここではバックエンド処理用として定義
-const supabaseUrl = process.env.SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY || '';
+// シングルトンインスタンスを保持
+let supabaseInstance: any = null;
 
-if (!supabaseUrl || !supabaseKey) {
-  console.warn('Supabase credentials are missing. Backend functions may fail.');
-}
+export const getSupabaseClient = () => {
+  if (supabaseInstance) return supabaseInstance;
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Supabase environment variables (SUPABASE_URL, SUPABASE_SERVICE_KEY) are missing.');
+  }
+
+  supabaseInstance = createClient(supabaseUrl, supabaseKey);
+  return supabaseInstance;
+};
