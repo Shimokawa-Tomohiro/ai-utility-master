@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, User, MapPin } from 'lucide-react';
+import { Copy, User, MapPin, Info } from 'lucide-react';
 import { PLANS } from '../types';
 import { BalanceChecker } from '../components/BalanceChecker';
 
@@ -194,11 +194,30 @@ export const Home: React.FC = () => {
       {/* Pricing Section */}
       <section id="pricing" className="py-20 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <h2 className="text-3xl font-extrabold text-slate-900">料金プラン</h2>
             <p className="mt-4 text-lg text-slate-600">
               必要な分だけ購入できるプリペイド方式。<br />月額費用は一切かかりません。
             </p>
+          </div>
+
+          {/* 購入前の確認事項（控えめなデザインに変更） */}
+          <div className="max-w-3xl mx-auto mb-16">
+             <div className="bg-white border border-slate-200 rounded-lg p-5 flex flex-col sm:flex-row items-start gap-4">
+                <div className="flex-shrink-0 bg-slate-100 p-2 rounded-full text-slate-500 mt-1">
+                  <Info className="w-5 h-5" />
+                </div>
+                <div className="text-sm text-slate-600 leading-relaxed">
+                  <h3 className="font-bold text-slate-800 mb-1">動作環境に関するご注意</h3>
+                  <p>
+                    社内セキュリティやネットワーク環境によっては機能が制限される場合があります。
+                    法人のネットワーク環境でご利用の場合は、事前に管理者へご確認の上ご購入ください。
+                  </p>
+                  <p className="text-xs text-slate-400 mt-2">
+                    ※環境起因による動作不良は返金対象外となります。詳細は特定商取引法に基づく表記をご確認ください。
+                  </p>
+                </div>
+             </div>
           </div>
 
           <div className="flex flex-wrap justify-center gap-8 items-start">

@@ -62,12 +62,28 @@ export const LegalTokusho: React.FC = () => {
 
             <div className="py-4 grid grid-cols-1 md:grid-cols-3 gap-4">
               <dt className="font-bold text-slate-900">返品・キャンセルについて</dt>
-              <dd className="md:col-span-2 text-slate-600">
+              <dd className="md:col-span-2 text-slate-600 leading-relaxed">
                 デジタルコンテンツの性質上、購入後の返品・キャンセル・返金はお受けできません。<br />
-                万が一、発行されたPINコードが機能しない等の不具合があった場合は、上記メールアドレスまでご連絡ください。代替コードの発行等で対応いたします。
+                特に、お客様の利用環境（社内セキュリティ、ファイアウォール、プロキシ、OSやブラウザのバージョン等）に起因して本機能が動作しない場合であっても、返金の対象外となります。<br /><br />
+                万が一、発行されたPINコード自体に不備がある場合（コードの間違い等）のみ、代替コードの発行にて対応いたします。
               </dd>
             </div>
           </dl>
+
+          <div className="mt-12 pt-8 border-t border-slate-100">
+            <h2 className="text-lg font-bold text-slate-900 mb-4">免責事項（動作環境について）</h2>
+            <div className="text-slate-600 space-y-4 text-sm leading-relaxed">
+              <p>
+                本サービスは外部のAIモデルおよびAPIを利用しています。お客様のネットワーク環境（社内LAN、VPN、プロキシサーバー等）や、セキュリティソフトの設定によっては、通信が遮断され正常に動作しない場合があります。
+              </p>
+              <p>
+                これらお客様ご自身の環境に起因する動作不具合については、当方は責任を負いかねます。また、サポートの対象外となりますので予めご了承ください。
+              </p>
+              <p>
+                提供するAI機能は、生成AIの性質上、必ずしも正確性や完全性を保証するものではありません。
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
