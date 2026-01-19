@@ -32,14 +32,14 @@ function generatePin() {
 }
 
 async function sendPinEmail(toEmail: string, pinCode: string, credits: number, planName: string) {
-  const sheetFormula = `=IMPORTDATA("https://${MY_DOMAIN}/api/sheet?name=" & ENCODEURL(A1) & "&pin=${pinCode}")`;
+  // 姓名分割用URL
+  const nameFormula = `=IMPORTDATA("https://${MY_DOMAIN}/api/sheet?name=" & ENCODEURL(A1) & "&pin=${pinCode}")`;
+  // 住所分割用URL
+  const addressFormula = `=IMPORTDATA("https://${MY_DOMAIN}/api/sheet?address=" & ENCODEURL(A1) & "&pin=${pinCode}")`;
   
   console.log(`[Email] Attempting to send to: ${toEmail}`);
   
   try {
-    // Resendの送信処理
-    // 注: Resendの無料枠(Sandbox)では、登録した自分のメールアドレスにしか送信できません。
-    // 本番運用するにはResendダッシュボードでドメインの追加とDNS設定が必要です。
     const { data, error } = await resend.emails.send({
       from: 'AI Utility Master <onboarding@resend.dev>', // 本番時は自身の認証済みドメインに変更推奨
       to: toEmail,
@@ -47,7 +47,7 @@ async function sendPinEmail(toEmail: string, pinCode: string, credits: number, p
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #3b82f6;">ご購入ありがとうございます</h2>
-            <p>以下のPINコードですぐに姓名分割関数をご利用いただけます。</p>
+            <p>以下のPINコードですぐにAI機能をご利用いただけます。</p>
             
             <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
                 <p style="margin: 0; color: #64748b; font-size: 0.9rem;">あなたのPINコード</p>
@@ -58,9 +58,16 @@ async function sendPinEmail(toEmail: string, pinCode: string, credits: number, p
             <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
             
             <h3>使い方（スプレッドシート）</h3>
-            <p>以下の数式をコピーしてセルに貼り付けてください。</p>
+            <p>目的に合わせて、以下の数式をコピーしてセルに貼り付けてください。</p>
+            
+            <h4 style="margin-bottom:5px;">1. 姓名分割（名前 → 姓・名）</h4>
+            <code style="display: block; background: #1e293b; color: #e2e8f0; padding: 15px; border-radius: 6px; overflow-x: auto; margin-bottom: 20px;">
+                ${nameFormula}
+            </code>
+
+            <h4 style="margin-bottom:5px;">2. 住所分割（住所 → 都道府県・市区町村・番地・建物）</h4>
             <code style="display: block; background: #1e293b; color: #e2e8f0; padding: 15px; border-radius: 6px; overflow-x: auto;">
-                ${sheetFormula}
+                ${addressFormula}
             </code>
             
             <br>
@@ -75,7 +82,6 @@ async function sendPinEmail(toEmail: string, pinCode: string, credits: number, p
       `
     });
 
-    // Resend APIがエラーオブジェクトを返した場合のハンドリング
     if (error) {
       console.error(`[Email Error] Resend API returned error:`, JSON.stringify(error, null, 2));
       throw new Error(`Resend API Error: ${error.message}`);
@@ -155,9 +161,6 @@ export default async function handler(req: any, res: any) {
             await sendPinEmail(customerEmail, newPin, addedCredits, planName);
           } catch (emailErr) {
             console.error("[Fatal] PIN created but email failed.", emailErr);
-            // 注: ここでエラーを返すとStripeがリトライし、PINが重複発行される可能性があります。
-            // そのため、DB保存成功後はWebhookとしては200を返し、
-            // メール不達はログ監視で対応するのが一般的な安全策です。
           }
 
           break; // Success loop exit

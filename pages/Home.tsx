@@ -1,16 +1,18 @@
-import React from 'react';
-import { Copy, User, FileSpreadsheet } from 'lucide-react';
+import React, { useState } from 'react';
+import { Copy, User, MapPin } from 'lucide-react';
 import { PLANS } from '../types';
 import { BalanceChecker } from '../components/BalanceChecker';
 
 export const Home: React.FC = () => {
+  const [demoMode, setDemoMode] = useState<'name' | 'address'>('name');
   
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     alert('コピーしました！');
   };
 
-  const sampleFormula = '=IMPORTDATA("https://ai-utility-master.vercel.app/api/sheet?name=" & ENCODEURL(A1) & "&pin=AI-XXXX...")';
+  const nameFormula = '=IMPORTDATA("https://ai-utility-master.vercel.app/api/sheet?name=" & ENCODEURL(A1) & "&pin=AI-XXXX...")';
+  const addressFormula = '=IMPORTDATA("https://ai-utility-master.vercel.app/api/sheet?address=" & ENCODEURL(A1) & "&pin=AI-XXXX...")';
 
   return (
     <div className="pb-20">
@@ -24,7 +26,8 @@ export const Home: React.FC = () => {
           </h1>
           
           <p className="max-w-2xl mx-auto text-lg sm:text-xl text-slate-600 mb-10 leading-relaxed">
-            複雑なマクロやGASはもう不要です。PINコードを購入して、スプレッドシートに簡単な関数を貼り付けるだけ。
+            複雑なマクロやGASはもう不要です。PINコードを購入して、スプレッドシートに簡単な関数を貼り付けるだけ。<br />
+            姓名分割も、住所分割もこれひとつで。
           </p>
         </div>
         
@@ -61,11 +64,11 @@ export const Home: React.FC = () => {
             {/* Feature 2 */}
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
               <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-6 text-purple-600">
-                <FileSpreadsheet className="w-6 h-6" />
+                <MapPin className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">リスト整形（Coming Soon）</h3>
+              <h3 className="text-xl font-bold text-slate-900 mb-3">AI住所分割</h3>
               <p className="text-slate-600 leading-relaxed">
-                表記ゆれの統一、住所の分割、全角半角の統一など、面倒なリストクリーニング作業を自動化する機能を順次追加予定。
+                住所文字列を「都道府県」「市区町村」「町域・番地」「建物名」の4列に自動分割。表記ゆれにも柔軟に対応します。
               </p>
             </div>
           </div>
@@ -92,7 +95,7 @@ export const Home: React.FC = () => {
                   <div className="flex-shrink-0 w-8 h-8 bg-brand-600 text-white rounded-full flex items-center justify-center font-bold">2</div>
                   <div>
                     <h4 className="text-lg font-bold text-slate-900">関数をコピー</h4>
-                    <p className="text-slate-600">指定のIMPORTDATA関数をコピーし、PINコード部分を書き換えます。</p>
+                    <p className="text-slate-600">姓名分割、または住所分割用のIMPORTDATA関数をコピーし、PINコード部分を書き換えます。</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
@@ -107,20 +110,41 @@ export const Home: React.FC = () => {
 
             <div className="mt-12 lg:mt-0">
               <div className="bg-slate-900 rounded-xl shadow-2xl overflow-hidden border border-slate-700">
-                <div className="flex items-center gap-2 px-4 py-3 bg-slate-800 border-b border-slate-700">
-                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                  <div className="ml-2 text-xs text-slate-400 font-mono">spreadsheet-demo</div>
+                <div className="flex items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <div className="ml-2 text-xs text-slate-400 font-mono">spreadsheet-demo</div>
+                  </div>
+                  
+                  {/* Toggle Switch */}
+                  <div className="flex bg-slate-900 rounded-lg p-1">
+                     <button 
+                        onClick={() => setDemoMode('name')}
+                        className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${demoMode === 'name' ? 'bg-brand-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                     >
+                       姓名
+                     </button>
+                     <button 
+                        onClick={() => setDemoMode('address')}
+                        className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${demoMode === 'address' ? 'bg-brand-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                     >
+                       住所
+                     </button>
+                  </div>
                 </div>
+                
                 <div className="p-6">
-                  <p className="text-slate-400 text-sm mb-2 font-mono"># セルA1にある名前を分割する場合</p>
+                  <p className="text-slate-400 text-sm mb-2 font-mono">
+                    {demoMode === 'name' ? '# セルA1にある名前を分割' : '# セルA1にある住所を分割'}
+                  </p>
                   <div className="relative group">
                     <code className="block bg-slate-950 text-green-400 p-4 rounded-lg font-mono text-sm break-all leading-relaxed border border-slate-800">
-                      {sampleFormula}
+                      {demoMode === 'name' ? nameFormula : addressFormula}
                     </code>
                     <button 
-                      onClick={() => copyToClipboard(sampleFormula)}
+                      onClick={() => copyToClipboard(demoMode === 'name' ? nameFormula : addressFormula)}
                       className="absolute top-2 right-2 p-2 bg-slate-800 text-slate-300 rounded hover:bg-slate-700 hover:text-white transition-colors"
                       title="コピー"
                     >
@@ -128,18 +152,37 @@ export const Home: React.FC = () => {
                     </button>
                   </div>
                   
-                  <div className="mt-6 grid grid-cols-3 gap-px bg-slate-700 border border-slate-700 rounded-lg overflow-hidden text-sm">
-                    <div className="bg-slate-800 p-2 text-slate-400 font-medium">入力 (A1)</div>
-                    <div className="bg-slate-800 p-2 text-slate-400 font-medium">姓 (B1)</div>
-                    <div className="bg-slate-800 p-2 text-slate-400 font-medium">名 (C1)</div>
-                    
-                    <div className="bg-white text-slate-900 p-2">徳川家康</div>
-                    <div className="bg-slate-50 text-slate-900 p-2">徳川</div>
-                    <div className="bg-slate-50 text-slate-900 p-2">家康</div>
-                    
-                    <div className="bg-white text-slate-900 p-2">LeonardoDiCaprio</div>
-                    <div className="bg-slate-50 text-slate-900 p-2">Leonardo</div>
-                    <div className="bg-slate-50 text-slate-900 p-2">DiCaprio</div>
+                  {/* Demo Table */}
+                  <div className="mt-6 border border-slate-700 rounded-lg overflow-hidden text-sm">
+                    {demoMode === 'name' ? (
+                      <div className="grid grid-cols-3 gap-px bg-slate-700">
+                        <div className="bg-slate-800 p-2 text-slate-400 font-medium">入力 (A1)</div>
+                        <div className="bg-slate-800 p-2 text-slate-400 font-medium">姓 (B1)</div>
+                        <div className="bg-slate-800 p-2 text-slate-400 font-medium">名 (C1)</div>
+                        
+                        <div className="bg-white text-slate-900 p-2">徳川家康</div>
+                        <div className="bg-slate-50 text-slate-900 p-2">徳川</div>
+                        <div className="bg-slate-50 text-slate-900 p-2">家康</div>
+                        
+                        <div className="bg-white text-slate-900 p-2">LeonardoDiCaprio</div>
+                        <div className="bg-slate-50 text-slate-900 p-2">Leonardo</div>
+                        <div className="bg-slate-50 text-slate-900 p-2">DiCaprio</div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-12 gap-px bg-slate-700 text-xs sm:text-sm">
+                        <div className="col-span-4 bg-slate-800 p-2 text-slate-400 font-medium">入力 (A1)</div>
+                        <div className="col-span-2 bg-slate-800 p-2 text-slate-400 font-medium">都道府県</div>
+                        <div className="col-span-2 bg-slate-800 p-2 text-slate-400 font-medium">市区町村</div>
+                        <div className="col-span-2 bg-slate-800 p-2 text-slate-400 font-medium">番地</div>
+                        <div className="col-span-2 bg-slate-800 p-2 text-slate-400 font-medium">建物</div>
+                        
+                        <div className="col-span-4 bg-white text-slate-900 p-2 truncate" title="東京都港区麻布台1-3-1麻布台ヒルズ森JPタワー24F">東京都港区...</div>
+                        <div className="col-span-2 bg-slate-50 text-slate-900 p-2 truncate">東京都</div>
+                        <div className="col-span-2 bg-slate-50 text-slate-900 p-2 truncate">港区</div>
+                        <div className="col-span-2 bg-slate-50 text-slate-900 p-2 truncate">麻布台1-3-1</div>
+                        <div className="col-span-2 bg-slate-50 text-slate-900 p-2 truncate" title="麻布台ヒルズ森JPタワー 24F">麻布台ヒルズ...</div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
