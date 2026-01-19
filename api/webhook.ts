@@ -115,6 +115,9 @@ export default async function handler(req: any, res: any) {
     const session = event.data.object as Stripe.Checkout.Session;
     const customerEmail = session.customer_details?.email;
     const amountTotal = session.amount_total;
+    
+    // Stripe Event ID for Idempotency logic (if implemented)
+    const eventId = event.id;
 
     console.log(`[Webhook] Processing checkout. Email: ${customerEmail}, Amount: ${amountTotal}`);
 
