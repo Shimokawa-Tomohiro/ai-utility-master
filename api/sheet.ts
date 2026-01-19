@@ -1,23 +1,27 @@
 import OpenAI from 'openai';
 import { getSupabaseClient } from './_lib/supabase';
 
-// Initialize OpenAI
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Initialize OpenAI safely
+const getOpenAI = () => {
+  if (!process.env.OPENAI_API_KEY) return null;
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+};
 
 export default async function handler(req: any, res: any) {
-  const { pin, name, target } = req.query; // target can be 'last', 'first', or 'all' (default)
+  const { pin, name, target } = req.query;
 
-  if (!pin) {
-    return res.status(200).send("Error: PINコードが必要です");
-  }
-  if (!name) {
-    return res.status(200).send("Error: 名前が必要です");
-  }
+  // Set encoding
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+
+  if (!pin) return res.status(200).send("Error: PINコードが必要です");
+  if (!name) return res.status(200).send("Error: 名前が必要です");
 
   try {
     const supabase = getSupabaseClient();
+    if (!supabase) return res.status(200).send("Error: システム設定エラー(DB)");
+
+    const openai = getOpenAI();
+    if (!openai) return res.status(200).send("Error: システム設定エラー(AI)");
 
     // 1. Check PIN and Credits in Supabase
     const { data: userData, error: dbError } = await supabase
@@ -71,8 +75,6 @@ export default async function handler(req: any, res: any) {
     }
 
     // 4. Return result based on target
-    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-    
     if (target === 'last') {
       res.status(200).send(lastName);
     } else if (target === 'first') {

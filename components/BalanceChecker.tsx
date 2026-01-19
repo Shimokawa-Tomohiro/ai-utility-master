@@ -16,14 +16,12 @@ export const BalanceChecker: React.FC = () => {
     setError(null);
 
     try {
-      // In a real scenario, this connects to the backend API provided by the user
-      // Assuming relative path /api/balance works via proxy or same-domain hosting
       const response = await fetch(`/api/balance?pin=${encodeURIComponent(pin)}`);
       
-      if (!response.ok) {
-        // Try to get error details from JSON response
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `Server responded with ${response.status}`);
+      // レスポンスがJSONでない場合（Vercelの致命的なエラーHTMLなど）を考慮
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("サーバーからの応答が不正です (Not JSON)");
       }
 
       const data: BalanceResponse = await response.json();
@@ -84,8 +82,10 @@ export const BalanceChecker: React.FC = () => {
             <>
               <XCircle className="w-6 h-6 text-red-600 mt-0.5" />
               <div>
-                <h4 className="font-bold text-red-900">無効なPINコードです</h4>
-                <p className="text-red-800 mt-1">入力をお確かめの上、再度お試しください。</p>
+                <h4 className="font-bold text-red-900">確認できませんでした</h4>
+                <p className="text-red-800 mt-1">
+                  {result.message || "入力をお確かめの上、再度お試しください。"}
+                </p>
               </div>
             </>
           )}
