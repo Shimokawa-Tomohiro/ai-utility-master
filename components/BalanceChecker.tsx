@@ -6,26 +6,31 @@ export const BalanceChecker: React.FC = () => {
   const [pin, setPin] = useState('');
   const [result, setResult] = useState<BalanceResponse | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const checkBalance = async () => {
     if (!pin.trim()) return;
     
     setLoading(true);
     setResult(null);
-    setError(false);
+    setError(null);
 
     try {
       // In a real scenario, this connects to the backend API provided by the user
       // Assuming relative path /api/balance works via proxy or same-domain hosting
       const response = await fetch(`/api/balance?pin=${encodeURIComponent(pin)}`);
+      
       if (!response.ok) {
-        throw new Error("Network response was not ok");
+        // Try to get error details from JSON response
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `Server responded with ${response.status}`);
       }
+
       const data: BalanceResponse = await response.json();
       setResult(data);
-    } catch (e) {
-      setError(true);
+    } catch (e: any) {
+      console.error(e);
+      setError(e.message || "通信エラーが発生しました。");
     } finally {
       setLoading(false);
     }
@@ -90,7 +95,7 @@ export const BalanceChecker: React.FC = () => {
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
           <XCircle className="w-5 h-5 text-red-600" />
-          <span className="text-red-700 font-medium">通信エラーが発生しました。しばらくしてから再度お試しください。</span>
+          <span className="text-red-700 font-medium">エラー: {error}</span>
         </div>
       )}
     </div>

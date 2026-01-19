@@ -1,27 +1,28 @@
 import { getSupabaseClient } from './_lib/supabase';
 
 export default async function handler(req: any, res: any) {
-  // CORS Headers
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
-
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
-  const { pin } = req.query;
-
-  if (!pin) {
-    return res.status(400).json({ valid: false, message: 'PIN is required' });
-  }
-
   try {
+    // CORS Headers
+    // Note: setHeader values must be strings, not booleans
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+    res.setHeader(
+      'Access-Control-Allow-Headers',
+      'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    );
+
+    if (req.method === 'OPTIONS') {
+      res.status(200).end();
+      return;
+    }
+
+    const { pin } = req.query;
+
+    if (!pin) {
+      return res.status(400).json({ valid: false, message: 'PIN is required' });
+    }
+
     const supabase = getSupabaseClient();
     
     const { data, error } = await supabase
@@ -44,10 +45,11 @@ export default async function handler(req: any, res: any) {
   } catch (error: any) {
     console.error('Balance Check Error:', error);
     // 環境変数エラーなどの場合
+    const message = error.message || 'Server Error';
     return res.status(500).json({ 
       valid: false, 
       message: 'Server Error', 
-      detail: error.message 
+      detail: message 
     });
   }
 }
